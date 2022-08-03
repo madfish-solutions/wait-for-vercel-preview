@@ -220,6 +220,7 @@ const waitForDeploymentToStart = async ({
         sha,
         environment,
       });
+      console.log(deployments)
 
       const deployment =
         deployments.data.length > 0 &&
