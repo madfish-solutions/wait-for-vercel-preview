@@ -41,6 +41,7 @@ const waitForUrl = async ({
 
       let checkUri = new URL(path, url);
 
+      // @ts-ignore
       await axios.get(checkUri.toString(), {
         headers,
       });
@@ -79,6 +80,7 @@ const getPassword = async ({ url, vercelPassword }) => {
   const data = new URLSearchParams();
   data.append('_vercel_password', vercelPassword);
 
+  // @ts-ignore
   const response = await axios({
     url,
     method: 'post',
@@ -123,6 +125,7 @@ const waitForStatus = async ({
   allowInactive,
   checkIntervalInMilliseconds,
 }) => {
+  // @ts-ignore
   const octokit = new github.getOctokit(token);
   const iterations = calculateIterations(
     maxTimeout,
@@ -341,6 +344,7 @@ const run = async () => {
 
     // Get target url
     const targetUrl = status.target_url;
+    const environment = status.environment;
 
     if (!targetUrl) {
       core.setFailed(`no target_url found in the status check`);
@@ -348,9 +352,11 @@ const run = async () => {
     }
 
     console.log('target url »', targetUrl);
+    console.log('environment »', environment);
 
     // Set output
     core.setOutput('url', targetUrl);
+    core.setOutput('environment', environment);
 
     // Wait for url to respond with a success
     console.log(`Waiting for a status code 200 from: ${targetUrl}`);

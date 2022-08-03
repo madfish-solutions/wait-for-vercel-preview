@@ -47,6 +47,7 @@ const waitForUrl = async ({
 
       let checkUri = new URL(path, url);
 
+      // @ts-ignore
       await axios.get(checkUri.toString(), {
         headers,
       });
@@ -85,6 +86,7 @@ const getPassword = async ({ url, vercelPassword }) => {
   const data = new URLSearchParams();
   data.append('_vercel_password', vercelPassword);
 
+  // @ts-ignore
   const response = await axios({
     url,
     method: 'post',
@@ -129,6 +131,7 @@ const waitForStatus = async ({
   allowInactive,
   checkIntervalInMilliseconds,
 }) => {
+  // @ts-ignore
   const octokit = new github.getOctokit(token);
   const iterations = calculateIterations(
     maxTimeout,
@@ -326,7 +329,7 @@ const run = async () => {
       sha: sha,
       environment: ENVIRONMENT,
       actorName: 'vercel[bot]',
-      maxTimeout: MAX_TIMEOUT / 2,
+      maxTimeout: MAX_TIMEOUT,
       checkIntervalInMilliseconds: CHECK_INTERVAL_IN_MS,
     });
 
@@ -347,6 +350,7 @@ const run = async () => {
 
     // Get target url
     const targetUrl = status.target_url;
+    const environment = status.environment;
 
     if (!targetUrl) {
       core.setFailed(`no target_url found in the status check`);
@@ -354,9 +358,11 @@ const run = async () => {
     }
 
     console.log('target url »', targetUrl);
+    console.log('environment »', environment);
 
     // Set output
     core.setOutput('url', targetUrl);
+    core.setOutput('environment', environment);
 
     // Wait for url to respond with a success
     console.log(`Waiting for a status code 200 from: ${targetUrl}`);
@@ -7847,8 +7853,9 @@ RedirectableRequest.prototype._processResponse = function (response) {
     var redirectUrlParts = url.parse(redirectUrl);
     Object.assign(this._options, redirectUrlParts);
 
-    // Drop the confidential headers when redirecting to another domain
-    if (!(redirectUrlParts.host === currentHost || isSubdomainOf(redirectUrlParts.host, currentHost))) {
+    // Drop confidential headers when redirecting to another scheme:domain
+    if (redirectUrlParts.protocol !== currentUrlParts.protocol ||
+       !isSameOrSubdomain(redirectUrlParts.host, currentHost)) {
       removeMatchingHeaders(/^(?:authorization|cookie)$/i, this._options.headers);
     }
 
@@ -8014,7 +8021,10 @@ function abortRequest(request) {
   request.abort();
 }
 
-function isSubdomainOf(subdomain, domain) {
+function isSameOrSubdomain(subdomain, domain) {
+  if (subdomain === domain) {
+    return true;
+  }
   const dot = subdomain.length - domain.length - 1;
   return dot > 0 && subdomain[dot] === "." && subdomain.endsWith(domain);
 }
